@@ -14,6 +14,7 @@ class VerticalCalendar extends StatefulWidget {
   final PeriodChanged onRangeSelected;
   final EdgeInsetsGeometry listPadding;
 	final bool triggerScrollEvents;
+	final double itemExtent;
 	final Function onDraggedDown;
 	final Function onDraggedUp;
 
@@ -28,6 +29,7 @@ class VerticalCalendar extends StatefulWidget {
     this.listPadding,
 		this.onDraggedDown,
 		this.onDraggedUp,
+		this.itemExtent,
 		this.triggerScrollEvents})
       : assert(minDate != null),
         assert(maxDate != null),
@@ -103,7 +105,7 @@ class _VerticalCalendarState extends State<VerticalCalendar> {
                   6,
               padding: widget.listPadding ?? EdgeInsets.zero,
               itemCount: _months.length + (widget.triggerScrollEvents ? 2 : 0),
-							itemExtent: 2,
+							itemExtent: widget.itemExtent,
               itemBuilder: (BuildContext context, int index) {
 								int position = index;
 								if (widget.triggerScrollEvents) {
