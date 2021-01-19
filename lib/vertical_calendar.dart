@@ -64,57 +64,51 @@ class _VerticalCalendarState extends State<VerticalCalendar> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: <Widget>[
-        Expanded(
-          child: ListView.builder(
+    return ListView.builder(
 						controller: widget.scrollController,
-              cacheExtent:
-              (MediaQuery
-                  .of(context)
-                  .size
-                  .width / DateTime.daysPerWeek) *
-                  6,
-              padding: widget.listPadding ?? EdgeInsets.zero,
-              itemCount: _months.length,
-              itemBuilder: (BuildContext context, int position) {
-                return _MonthView(
-                    month: _months[position],
-                    minDate: _minDate,
-                    maxDate: _maxDate,
-                    monthBuilder: widget.monthBuilder,
-                    dayBuilder: widget.dayBuilder,
-                    onDayPressed: widget.onRangeSelected != null
-                        ? (DateTime date) {
-                      if (rangeMinDate == null || rangeMaxDate != null) {
-                        setState(() {
-                          rangeMinDate = date;
-                          rangeMaxDate = null;
-                        });
-                      } else if (date.isBefore(rangeMinDate)) {
-                        setState(() {
-                          rangeMaxDate = rangeMinDate;
-                          rangeMinDate = date;
-                        });
-                      } else if (date.isAfter(rangeMinDate)) {
-                        setState(() {
-                          rangeMaxDate = date;
-                        });
-                      }
+        cacheExtent:
+        (MediaQuery
+            .of(context)
+            .size
+            .width / DateTime.daysPerWeek) *
+            6,
+        padding: widget.listPadding ?? EdgeInsets.zero,
+        itemCount: _months.length,
+        itemBuilder: (BuildContext context, int position) {
+          return _MonthView(
+              month: _months[position],
+              minDate: _minDate,
+              maxDate: _maxDate,
+              monthBuilder: widget.monthBuilder,
+              dayBuilder: widget.dayBuilder,
+              onDayPressed: widget.onRangeSelected != null
+                  ? (DateTime date) {
+                if (rangeMinDate == null || rangeMaxDate != null) {
+                  setState(() {
+                    rangeMinDate = date;
+                    rangeMaxDate = null;
+                  });
+                } else if (date.isBefore(rangeMinDate)) {
+                  setState(() {
+                    rangeMaxDate = rangeMinDate;
+                    rangeMinDate = date;
+                  });
+                } else if (date.isAfter(rangeMinDate)) {
+                  setState(() {
+                    rangeMaxDate = date;
+                  });
+                }
 
-                      widget.onRangeSelected(rangeMinDate, rangeMaxDate);
+                widget.onRangeSelected(rangeMinDate, rangeMaxDate);
 
-                      if (widget.onDayPressed != null) {
-                        widget.onDayPressed(date);
-                      }
-                    }
-                        : widget.onDayPressed,
-                    rangeMinDate: rangeMinDate,
-                    rangeMaxDate: rangeMaxDate);
-              }),
-        ),
-      ],
-    );
+                if (widget.onDayPressed != null) {
+                  widget.onDayPressed(date);
+                }
+              }
+                  : widget.onDayPressed,
+              rangeMinDate: rangeMinDate,
+              rangeMaxDate: rangeMaxDate);
+        });
   }
 }
 
