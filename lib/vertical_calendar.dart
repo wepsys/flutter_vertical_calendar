@@ -9,6 +9,7 @@ class VerticalCalendar extends StatefulWidget {
   final MonthBuilder monthBuilder;
   final DayBuilder dayBuilder;
   final DateTime initialMinDate;
+	final ScrollController scrollController;
   final DateTime initialMaxDate;
   final ValueChanged<DateTime> onDayPressed;
   final PeriodChanged onRangeSelected;
@@ -22,7 +23,8 @@ class VerticalCalendar extends StatefulWidget {
     this.onRangeSelected,
     this.initialMinDate,
     this.initialMaxDate,
-    this.listPadding})
+    this.listPadding,
+		this.scrollController})
       : assert(minDate != null),
         assert(maxDate != null),
         assert(minDate.isBefore(maxDate));
@@ -66,6 +68,7 @@ class _VerticalCalendarState extends State<VerticalCalendar> {
       children: <Widget>[
         Expanded(
           child: ListView.builder(
+						controller: widget.scrollController,
               cacheExtent:
               (MediaQuery
                   .of(context)
