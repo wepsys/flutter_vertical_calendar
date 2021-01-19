@@ -103,6 +103,7 @@ class _VerticalCalendarState extends State<VerticalCalendar> {
                   6,
               padding: widget.listPadding ?? EdgeInsets.zero,
               itemCount: _months.length + (widget.triggerScrollEvents ? 2 : 0),
+							itemExtent: 2,
               itemBuilder: (BuildContext context, int index) {
 								int position = index;
 								if (widget.triggerScrollEvents) {
