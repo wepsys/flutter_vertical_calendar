@@ -9,11 +9,13 @@ class VerticalCalendar extends StatefulWidget {
   final MonthBuilder monthBuilder;
   final DayBuilder dayBuilder;
   final DateTime initialMinDate;
-	final ScrollController scrollController;
   final DateTime initialMaxDate;
   final ValueChanged<DateTime> onDayPressed;
   final PeriodChanged onRangeSelected;
   final EdgeInsetsGeometry listPadding;
+	final bool triggerScrollEvents;
+	final Function onDraggedDown;
+	final Function onDraggedUp;
 
   VerticalCalendar({@required this.minDate,
     @required this.maxDate,
@@ -24,7 +26,9 @@ class VerticalCalendar extends StatefulWidget {
     this.initialMinDate,
     this.initialMaxDate,
     this.listPadding,
-		this.scrollController})
+		this.onDraggedDown,
+		this.onDraggedUp,
+		this.triggerScrollEvents})
       : assert(minDate != null),
         assert(maxDate != null),
         assert(minDate.isBefore(maxDate));
@@ -39,6 +43,7 @@ class _VerticalCalendarState extends State<VerticalCalendar> {
   List<Month> _months;
   DateTime rangeMinDate;
   DateTime rangeMaxDate;
+	ScrollController controller = ScrollController();
 
   @override
   void initState() {
@@ -48,67 +53,111 @@ class _VerticalCalendarState extends State<VerticalCalendar> {
     _maxDate = widget.maxDate.removeTime();
     rangeMinDate = widget.initialMinDate;
     rangeMaxDate = widget.initialMaxDate;
+		if (widget.triggerScrollEvents) {
+			controller.addListener(() {
+				if (controller.position.atEdge) {
+					if (controller.position.pixels <= 0) {
+						if (widget.onDraggedUp != null) {
+						  widget.onDraggedUp();
+						} else {
+							widget.onDraggedDown();
+						}
+					}
+				}
+			});
+		}
   }
 
   @override
   void didUpdateWidget(VerticalCalendar oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (oldWidget.minDate != widget.minDate ||
-        oldWidget.maxDate != widget.maxDate) {
-      _months = DateUtils.extractWeeks(widget.minDate, widget.maxDate);
-      _minDate = widget.minDate.removeTime();
+    if (oldWidget.minDate != widget.minDate || oldWidget.maxDate != widget.maxDate) {
+			DateTime startDate = widget.minDate;
+			if (widget.triggerScrollEvents) {
+				startDate = widget.minDate.subtract(Duration(days: 15));
+			}
+      _months = DateUtils.extractWeeks(startDate, widget.maxDate);
+      _minDate = startDate.removeTime();
       _maxDate = widget.maxDate.removeTime();
     }
   }
 
+	Future<void> scrollContent() async {
+		await Future<void>.delayed(Duration(milliseconds: 100));
+		await controller.animateTo(50, curve: Curves.ease, duration: Duration(milliseconds: 200));
+	}
+
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-						controller: widget.scrollController,
-        cacheExtent:
-        (MediaQuery
-            .of(context)
-            .size
-            .width / DateTime.daysPerWeek) *
-            6,
-        padding: widget.listPadding ?? EdgeInsets.zero,
-        itemCount: _months.length,
-        itemBuilder: (BuildContext context, int position) {
-          return _MonthView(
-              month: _months[position],
-              minDate: _minDate,
-              maxDate: _maxDate,
-              monthBuilder: widget.monthBuilder,
-              dayBuilder: widget.dayBuilder,
-              onDayPressed: widget.onRangeSelected != null
-                  ? (DateTime date) {
-                if (rangeMinDate == null || rangeMaxDate != null) {
-                  setState(() {
-                    rangeMinDate = date;
-                    rangeMaxDate = null;
-                  });
-                } else if (date.isBefore(rangeMinDate)) {
-                  setState(() {
-                    rangeMaxDate = rangeMinDate;
-                    rangeMinDate = date;
-                  });
-                } else if (date.isAfter(rangeMinDate)) {
-                  setState(() {
-                    rangeMaxDate = date;
-                  });
-                }
+    return Column(
+      children: <Widget>[
+        Expanded(
+          child: ListView.builder(
+						controller: controller,
+              cacheExtent:
+              (MediaQuery
+                  .of(context)
+                  .size
+                  .width / DateTime.daysPerWeek) *
+                  6,
+              padding: widget.listPadding ?? EdgeInsets.zero,
+              itemCount: _months.length + (widget.triggerScrollEvents ? 2 : 0),
+              itemBuilder: (BuildContext context, int index) {
+								int position = index;
+								if (widget.triggerScrollEvents) {
+									if (index == 0) {
+										return Container();
+									}
+									if (index >= _months.length + 1) {
+										return Container(
+											height: 50,
+											child: Center(
+												child: CircularProgressIndicator(
+													valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).primaryColor),
+												),
+											),
+										);
+									}
+									position = index - 1;
+								}
+                return _MonthView(
+                    month: _months[position],
+                    minDate: _minDate,
+                    maxDate: _maxDate,
+                    monthBuilder: widget.monthBuilder,
+                    dayBuilder: widget.dayBuilder,
+                    onDayPressed: widget.onRangeSelected != null
+                        ? (DateTime date) {
+                      if (rangeMinDate == null || rangeMaxDate != null) {
+                        setState(() {
+                          rangeMinDate = date;
+                          rangeMaxDate = null;
+                        });
+                      } else if (date.isBefore(rangeMinDate)) {
+                        setState(() {
+                          rangeMaxDate = rangeMinDate;
+                          rangeMinDate = date;
+                        });
+                      } else if (date.isAfter(rangeMinDate)) {
+                        setState(() {
+                          rangeMaxDate = date;
+                        });
+                      }
 
-                widget.onRangeSelected(rangeMinDate, rangeMaxDate);
+                      widget.onRangeSelected(rangeMinDate, rangeMaxDate);
 
-                if (widget.onDayPressed != null) {
-                  widget.onDayPressed(date);
-                }
-              }
-                  : widget.onDayPressed,
-              rangeMinDate: rangeMinDate,
-              rangeMaxDate: rangeMaxDate);
-        });
+                      if (widget.onDayPressed != null) {
+                        widget.onDayPressed(date);
+                      }
+                    }
+                        : widget.onDayPressed,
+                    rangeMinDate: rangeMinDate,
+                    rangeMaxDate: rangeMaxDate);
+              }),
+        ),
+      ],
+    );
   }
 }
 
