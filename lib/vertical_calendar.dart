@@ -99,7 +99,7 @@ class _VerticalCalendarState extends State<VerticalCalendar> {
               controller: controller,
               cacheExtent: (MediaQuery.of(context).size.width / DateTime.daysPerWeek) * 6,
               padding: widget.listPadding ?? EdgeInsets.zero,
-              itemCount: _months.length + (widget.triggerScrollEvents ? 1 : 0),
+              itemCount: _months.length,
               itemExtent: widget.itemExtent,
               itemBuilder: (BuildContext context, int index) {
                 int position = index;
