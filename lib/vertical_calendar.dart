@@ -74,12 +74,14 @@ class _VerticalCalendarState extends State<VerticalCalendar> {
 
     if (oldWidget.minDate != widget.minDate || oldWidget.maxDate != widget.maxDate) {
       DateTime startDate = widget.minDate;
+			DateTime endDate = widget.maxDate;
       if (widget.triggerScrollEvents) {
         startDate = widget.minDate.subtract(Duration(days: 15));
+				endDate = widget.maxDate.add(Duration(days: 60));
       }
       _months = DateUtils.extractWeeks(startDate, widget.maxDate);
       _minDate = startDate.removeTime();
-      _maxDate = widget.maxDate.removeTime();
+      _maxDate = endDate.removeTime();
     }
   }
 
